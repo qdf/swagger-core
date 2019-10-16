@@ -46,7 +46,9 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.Set;
 
 public abstract class AnnotationsUtils {
@@ -325,7 +327,6 @@ public abstract class AnnotationsUtils {
     }
 
     private static boolean resolveExample(Example exampleObject, ExampleObject example) {
-
         boolean isEmpty = true;
         if (StringUtils.isNotBlank(example.summary())) {
             isEmpty = false;
@@ -339,7 +340,14 @@ public abstract class AnnotationsUtils {
         if (StringUtils.isNotBlank(example.value())) {
             isEmpty = false;
             try {
-                exampleObject.setValue(Json.mapper().readTree(example.value()));
+                if (example.value().startsWith("file:")) {
+                    String filePath = example.value().substring(example.value().indexOf("file:") + 5);
+
+                    String value = new Scanner(Objects.requireNonNull(AnnotationsUtils.class.getClassLoader().getResourceAsStream(filePath)), "UTF-8").useDelimiter("\\A").next();
+                    exampleObject.setValue(value);
+                } else {
+                    exampleObject.setValue(Json.mapper().readTree(example.value()));
+                }
             } catch (IOException e) {
                 exampleObject.setValue(example.value());
             }
